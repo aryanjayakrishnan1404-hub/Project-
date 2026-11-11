@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Global Wildfire Trends (2021–2025) Dashboard</title>
+
+  <!-- Reveal.js Core & Dark Theme CSS -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reset.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/theme/black.min.css" id="theme">
+
+  <!-- Google Fonts & FontAwesome -->
+  <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@500;700&display=swap">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Chart.js CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+  <style>
+    :root {
+      --bg-dark: #121417;
+      --card-bg: #1d2127;
+      --card-border: #2e3540;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+      --accent-orange: #e65c00;
+      --accent-teal: #00e6a8;
+      --accent-blue: #00b0ff;
+    }
+
+    body, .reveal {
+      background-color: var(--bg-dark) !important;
+      font-family: 'Inter', system-ui, -apple-system, sans-serif;
+      color: var(--text-main);
+    }
+
+    .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
+      font-family: 'Inter', sans-serif;
+      color: var(--text-main);
+      text-transform: none;
+      letter-spacing: -0.02em;
+    }
+
+    /* Container & Cards Styling */
+    .dashboard-card {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 28px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+      text-align: left;
+    }
+
+    .kpi-row {
+      display: flex;
+      gap: 24px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-box {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--card-border);
+      border-radius: 10px;
+      padding: 16px 20px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+
+    .kpi-title {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .kpi-title-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      display: inline-block;
+    }
+
+    .kpi-value {
+      font-size: 38px;
+      font-weight: 800;
+      color: #ffffff;
+      line-height: 1.1;
+      font-family: 'JetBrains Mono', monospace;
+    }
+
+    .kpi-sub {
+      font-size: 13px;
+      color: var(--text-muted);
+    }
+
+    /* Chart Canvas Container */
+    .chart-wrapper {
+      position: relative;
+      height: 380px;
+      width: 100%;
+    }
+
+    /* Data Table Styling */
+    .custom-table-container {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 14px;
+      padding: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.4);
+    }
+
+    table.dashboard-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 18px;
+      text-align: left;
+    }
+
+    table.dashboard-table th {
+      background: #16191e;
+      color: var(--text-muted);
+      font-weight: 700;
+      padding: 16px;
+      border-bottom: 2px solid var(--card-border);
+      text-transform: uppercase;
+      font-size: 14px;
+      letter-spacing: 0.05em;
+    }
+
+    table.dashboard-table td {
+      padding: 16px;
+      border-bottom: 1px solid var(--card-border);
+      color: #e2e8f0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 17px;
+    }
+
+    table.dashboard-table tr:hover {
+      background: rgba(255, 255, 255, 0.03);
+    }
+
+    table.dashboard-table tr.total-row {
+      background: rgba(230, 92, 0, 0.08);
+      font-weight: 700;
+    }
+
+    table.dashboard-table tr.total-row td {
+      color: #ffffff;
+      border-top: 2px solid var(--accent-orange);
+      border-bottom: none;
+    }
+
+    /* Eyebrow header badge */
+    .slide-badge {
+      display: inline-block;
+      background: rgba(230, 92, 0, 0.15);
+      border: 1px solid var(--accent-orange);
+      color: var(--accent-orange);
+      font-weight: 700;
+      font-size: 13px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+
+    .slide-title-text {
+      font-size: 32px;
+      font-weight: 700;
+      margin-bottom: 20px;
+      text-align: left;
+    }
+
+    /* Custom Reveal Progress & Controls */
+    .reveal .progress {
+      color: var(--accent-orange);
+      height: 4px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="reveal">
+    <div class="slides">
+
+      <!-- SLIDE 1: Title & Overview -->
+      <section>
+        <div style="text-align: left; max-width: 1100px; margin: 0 auto;">
+          <span class="slide-badge"><i class="fa-solid fa-fire-flame-curved"></i> System Dynamics Motivation</span>
+          <h1 style="font-size: 52px; font-weight: 800; margin-bottom: 12px;">Global Wildfire Trends</h1>
+          <p style="color: var(--text-muted); font-size: 22px; margin-bottom: 40px;">
+            5-Year Cumulative Impact Analysis (2021–2025)
+          </p>
+
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px;">
+            
+            <div class="dashboard-card" style="border-top: 4px solid var(--accent-orange);">
+              <div class="kpi-title">
+                <i class="fa-solid fa-skull-crossbones" style="color: var(--accent-orange);"></i> Total Lives Lost
+              </div>
+              <div class="kpi-value" style="color: var(--accent-orange); margin-top: 12px;">130,000</div>
+              <p class="kpi-sub" style="margin-top: 8px;">Direct fatalities across 5-yr period</p>
+            </div>
+
+            <div class="dashboard-card" style="border-top: 4px solid var(--accent-teal);">
+              <div class="kpi-title">
+                <i class="fa-solid fa-user-ninja" style="color: var(--accent-teal);"></i> Total Injuries
+              </div>
+              <div class="kpi-value" style="color: var(--accent-teal); margin-top: 12px;">280,000</div>
+              <p class="kpi-sub" style="margin-top: 8px;">Civilian &amp; responder casualties</p>
+            </div>
+
+            <div class="dashboard-card" style="border-top: 4px solid var(--accent-blue);">
+              <div class="kpi-title">
+                <i class="fa-solid fa-satellite-dish" style="color: var(--accent-blue);"></i> Fire Detections
+              </div>
+              <div class="kpi-value" style="color: var(--accent-blue); margin-top: 12px;">21.5M</div>
+              <p class="kpi-sub" style="margin-top: 8px;">Satellite thermal anomalies (5-yr sum)</p>
+            </div>
+
+          </div>
+
+          <div style="margin-top: 36px; background: rgba(255, 255, 255, 0.03); border: 1px solid var(--card-border); padding: 18px 24px; border-radius: 10px; display: flex; align-items: center; justify-content: space-between;">
+            <div style="font-size: 15px; color: var(--text-muted);">
+              <i class="fa-solid fa-circle-info" style="color: var(--accent-orange); margin-right: 8px;"></i> Use <strong>Right Arrow (→)</strong> or click controls to view interactive visual charts.
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted);">Source: Global Fire Data Aggregates</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 2: Global Wildfire Casualties Chart -->
+      <section>
+        <div style="max-width: 1100px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+            <div>
+              <span class="slide-badge">Human Impact Trend</span>
+              <h2 class="slide-title-text" style="margin-bottom: 0;">Compounding Casualties Highlight Urgent System Need</h2>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted);">Hover points for exact metrics</div>
+          </div>
+
+          <div class="dashboard-card">
+            <!-- KPI Summary Boxes -->
+            <div class="kpi-row">
+              <div class="kpi-box">
+                <div class="kpi-title">
+                  <span class="kpi-title-dot" style="background: var(--accent-orange);"></span> 2025 Peak Fatalities
+                </div>
+                <div class="kpi-value" style="color: var(--accent-orange);">35,000 <span style="font-size: 18px; color: var(--text-muted); font-weight: 500;">people</span></div>
+              </div>
+
+              <div class="kpi-box">
+                <div class="kpi-title">
+                  <span class="kpi-title-dot" style="background: var(--accent-teal);"></span> 2025 Peak Injuries
+                </div>
+                <div class="kpi-value" style="color: var(--accent-teal);">72,000 <span style="font-size: 18px; color: var(--text-muted); font-weight: 500;">people</span></div>
+              </div>
+            </div>
+
+            <!-- Chart Container -->
+            <div class="chart-wrapper">
+              <canvas id="casualtiesChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 3: Satellite Fire Detections Chart -->
+      <section>
+        <div style="max-width: 1100px; margin: 0 auto;">
+          <div style="display: flex; justify-content: space-between; align-items: flex-end; margin-bottom: 16px;">
+            <div>
+              <span class="slide-badge" style="background: rgba(0, 176, 255, 0.15); border-color: var(--accent-blue); color: var(--accent-blue);">Satellite Monitoring</span>
+              <h2 class="slide-title-text" style="margin-bottom: 0;">Satellite Detections Peak at 4.7 Million in 2025</h2>
+            </div>
+            <div style="font-size: 13px; color: var(--text-muted);">MODIS Active Fire Proxy</div>
+          </div>
+
+          <div class="dashboard-card">
+            <div class="kpi-row">
+              <div class="kpi-box" style="max-width: 360px;">
+                <div class="kpi-title">
+                  <span class="kpi-title-dot" style="background: var(--accent-blue);"></span> 2025 Active Detections
+                </div>
+                <div class="kpi-value" style="color: var(--accent-blue);">4.7M <span style="font-size: 18px; color: var(--text-muted); font-weight: 500;">detections</span></div>
+              </div>
+              <div style="flex: 1; display: flex; align-items: center; padding-left: 20px; color: var(--text-muted); font-size: 15px; border-left: 1px solid var(--card-border);">
+                Exponential thermal anomaly growth underscores delay costs in initial airborne suppression.
+              </div>
+            </div>
+
+            <div class="chart-wrapper">
+              <canvas id="detectionsChart"></canvas>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <!-- SLIDE 4: Interactive Data Summary Table -->
+      <section>
+        <div style="max-width: 1100px; margin: 0 auto;">
+          <span class="slide-badge">Tabular Dataset</span>
+          <h2 class="slide-title-text">Complete 5-Year Data Summary</h2>
+
+          <div class="custom-table-container">
+            <table class="dashboard-table">
+              <thead>
+                <tr>
+                  <th>Year</th>
+                  <th style="color: var(--accent-orange);">Lives Lost</th>
+                  <th style="color: var(--accent-teal);">Injuries</th>
+                  <th style="color: var(--accent-blue);">Satellite Detections (M)</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td>2021</td>
+                  <td>24,000</td>
+                  <td>50,000</td>
+                  <td>4.1 M</td>
+                </tr>
+                <tr>
+                  <td>2022</td>
+                  <td>21,000</td>
+                  <td>48,000</td>
+                  <td>3.9 M</td>
+                </tr>
+                <tr>
+                  <td>2023</td>
+                  <td>27,500</td>
+                  <td>58,000</td>
+                  <td>4.5 M</td>
+                </tr>
+                <tr>
+                  <td>2024</td>
+                  <td>22,500</td>
+                  <td>52,000</td>
+                  <td>4.3 M</td>
+                </tr>
+                <tr>
+                  <td>2025</td>
+                  <td>35,000</td>
+                  <td>72,000</td>
+                  <td>4.7 M</td>
+                </tr>
+                <tr class="total-row">
+                  <td>TOTAL (5 Years)</td>
+                  <td style="color: var(--accent-orange);">130,000</td>
+                  <td style="color: var(--accent-teal);">280,000</td>
+                  <td style="color: var(--accent-blue);">21.5 M</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div style="margin-top: 20px; font-size: 13px; color: var(--text-muted); text-align: right;">
+            Replicated directly from <code>Wildfire_Global_Data_Dashboard.xlsx</code>
+          </div>
+        </div>
+      </section>
+
+    </div>
+  </div>
+
+  <!-- Reveal.js & Chart Initialization Script -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/reveal.js/4.5.0/reveal.min.js"></script>
+  <script>
+    // 1. Initialize Reveal.js
+    Reveal.initialize({
+      controls: true,
+      progress: true,
+      center: true,
+      hash: true,
+      transition: 'slide',
+      width: 1280,
+      height: 720,
+      margin: 0.06
+    });
+
+    // Global references for chart resize handling
+    let casualtiesChartInstance = null;
+    let detectionsChartInstance = null;
+
+    // Chart shared configuration parameters
+    const years = ['2021', '2022', '2023', '2024', '2025'];
+
+    document.addEventListener("DOMContentLoaded", function() {
+      
+      // 2. Build Casualties Line Chart (Slide 2)
+      const ctxCasualties = document.getElementById('casualtiesChart').getContext('2d');
+      casualtiesChartInstance = new Chart(ctxCasualties, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: 'Injuries',
+              data: [50000, 48000, 58000, 52000, 72000],
+              borderColor: '#00e6a8',
+              backgroundColor: 'rgba(0, 230, 168, 0.08)',
+              fill: true,
+              borderWidth: 3.5,
+              tension: 0.4,
+              pointBackgroundColor: '#1d2127',
+              pointBorderColor: '#00e6a8',
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 9
+            },
+            {
+              label: 'Lives Lost',
+              data: [24000, 21000, 27500, 22500, 35000],
+              borderColor: '#e65c00',
+              backgroundColor: 'rgba(230, 92, 0, 0.08)',
+              fill: true,
+              borderWidth: 3.5,
+              tension: 0.4,
+              pointBackgroundColor: '#1d2127',
+              pointBorderColor: '#e65c00',
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 9
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
+              display: true,
+              position: 'top',
+              align: 'end',
+              labels: {
+                color: '#94a3b8',
+                font: { family: 'Inter', size: 14, weight: '600' },
+                usePointStyle: true,
+                boxWidth: 10
+              }
+            },
+            tooltip: {
+              mode: 'index',
+              intersect: false,
+              backgroundColor: '#16191e',
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1',
+              borderColor: '#2e3540',
+              borderWidth: 1,
+              padding: 12,
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 14, family: 'JetBrains Mono' },
+              callbacks: {
+                label: function(context) {
+                  return ' ' + context.dataset.label + ': ' + context.parsed.y.toLocaleString() + ' people';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { family: 'Inter', size: 14, weight: '600' } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: {
+                color: '#94a3b8',
+                font: { family: 'JetBrains Mono', size: 13 },
+                callback: function(value) { return value.toLocaleString(); }
+              },
+              min: 15000
+            }
+          },
+          interaction: {
+            mode: 'nearest',
+            axis: 'x',
+            intersect: false
+          }
+        }
+      });
+
+      // 3. Build Satellite Detections Line Chart (Slide 3)
+      const ctxDetections = document.getElementById('detectionsChart').getContext('2d');
+      detectionsChartInstance = new Chart(ctxDetections, {
+        type: 'line',
+        data: {
+          labels: years,
+          datasets: [
+            {
+              label: 'Fire Detections (Millions)',
+              data: [4.1, 3.9, 4.5, 4.3, 4.7],
+              borderColor: '#00b0ff',
+              backgroundColor: 'rgba(0, 176, 255, 0.1)',
+              fill: true,
+              borderWidth: 3.5,
+              tension: 0.4,
+              pointBackgroundColor: '#1d2127',
+              pointBorderColor: '#00b0ff',
+              pointBorderWidth: 3,
+              pointRadius: 6,
+              pointHoverRadius: 9
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: { display: false },
+            tooltip: {
+              backgroundColor: '#16191e',
+              titleColor: '#f8fafc',
+              bodyColor: '#cbd5e1',
+              borderColor: '#2e3540',
+              borderWidth: 1,
+              padding: 12,
+              titleFont: { size: 14, weight: 'bold' },
+              bodyFont: { size: 14, family: 'JetBrains Mono' },
+              callbacks: {
+                label: function(context) {
+                  return ' Detections: ' + context.parsed.y + ' Million';
+                }
+              }
+            }
+          },
+          scales: {
+            x: {
+              grid: { display: false },
+              ticks: { color: '#94a3b8', font: { family: 'Inter', size: 14, weight: '600' } }
+            },
+            y: {
+              grid: { color: 'rgba(255, 255, 255, 0.06)' },
+              ticks: {
+                color: '#94a3b8',
+                font: { family: 'JetBrains Mono', size: 13 },
+                callback: function(value) { return value.toFixed(1) + ' M'; }
+              },
+              min: 3.0,
+              max: 5.0
+            }
+          }
+        }
+      });
+
+    });
+
+    // 4. Trigger Chart Resize on Reveal Slide Change to ensure smooth rendering
+    Reveal.on('slidechanged', event => {
+      if (casualtiesChartInstance) {
+        casualtiesChartInstance.resize();
+        casualtiesChartInstance.update();
+      }
+      if (detectionsChartInstance) {
+        detectionsChartInstance.resize();
+        detectionsChartInstance.update();
+      }
+    });
+  </script>
+</body>
+</html>
